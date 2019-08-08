@@ -15,9 +15,6 @@ add_library(csp-sharad SHARED
 target_link_libraries(csp-sharad
   PUBLIC
     cs-core
-    cs-gui
-    cs-graphics
-    cs-scene
 )
 
 # install plugin -----------------------------------------------------------------------------------
