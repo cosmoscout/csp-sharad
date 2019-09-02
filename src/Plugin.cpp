@@ -32,7 +32,9 @@ namespace csp::sharad {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  o.mFilePath = j.at("filePath").get<std::string>();
+  cs::core::parseSettingsSection("csp-sharad", [&] {
+    o.mFilePath = cs::core::parseProperty<std::string>("filePath", j);
+  });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
