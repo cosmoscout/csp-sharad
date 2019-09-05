@@ -24,7 +24,7 @@ namespace csp::sharad {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string Sharad::VERT = R"(
-#version 440 compatibility
+#version 330
 
 uniform mat4 uMatModelView;
 uniform mat4 uMatProjection;
@@ -58,7 +58,7 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string Sharad::FRAG = R"(
-#version 440 compatibility
+#version 330
 
 uniform sampler2DRect uDepthBuffer;
 uniform sampler2D uSharadTexture;
