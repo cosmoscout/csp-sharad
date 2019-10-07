@@ -6,9 +6,7 @@
 
 #include "Sharad.hpp"
 
-#include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-graphics/TextureLoader.hpp"
-#include "../../../src/cs-scene/CelestialObserver.hpp"
 #include "../../../src/cs-utils/convert.hpp"
 
 namespace csp::sharad {
@@ -44,7 +42,7 @@ Sharad::Sharad(std::string const& sCenterName, std::string const& sFrameName,
   mEndExistence = cs::utils::convert::toSpiceTime("2040-01-01 00:00:00.000");
 
   // load metadata -----------------------------------------------------------
-  FILE* pFile = fopen(sTabFile.c_str(), "r");
+  FILE* pFile = std::fopen(sTabFile.c_str(), "r");
 
   if (pFile == nullptr) {
     std::cout << "Failed to open Shard file " << sTabFile << std::endl;
@@ -53,11 +51,11 @@ Sharad::Sharad(std::string const& sCenterName, std::string const& sFrameName,
 
   std::vector<ProfileRadarData> meta;
 
-  while (fgetc(pFile) != EOF) {
+  while (std::fgetc(pFile) != EOF) {
     ProfileRadarData dataElement;
 
     // Scan the File, this is specific to the one SHARAD we currently have
-    fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
+    std::fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
         &dataElement.Year, &dataElement.Month, &dataElement.Day, &dataElement.Hour,
         &dataElement.Minute, &dataElement.Second, &dataElement.Millisecond, &dataElement.Latitude,
         &dataElement.Longitude, &dataElement.SurfaceAltitude, &dataElement.MROAltitude,
@@ -67,7 +65,7 @@ Sharad::Sharad(std::string const& sCenterName, std::string const& sFrameName,
 
   mSamples = (int)meta.size();
 
-  fclose(pFile);
+  std::fclose(pFile);
 
   // create geometry ---------------------------------------------------------
   struct Vertex {
