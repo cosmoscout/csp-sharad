@@ -25,3 +25,4 @@ install(
 )
 
 install(DIRECTORY "gui"              DESTINATION "share/resources")
+install(DIRECTORY "shaders"          DESTINATION "share/resources")

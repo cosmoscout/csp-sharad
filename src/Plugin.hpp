@@ -8,13 +8,17 @@
 #define CSP_SHARAD_PLUGIN_HPP
 
 #include "../../../src/cs-core/PluginBase.hpp"
-#include "Sharad.hpp"
+#include "../../../src/cs-utils/Property.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 
 #include <boost/filesystem.hpp>
+#include <memory>
 
 namespace csp::sharad {
+
+class Sharad;
+class SharadRenderer;
 
 /// This plugin allows the display of mars subsurface layers captured by the Mars Reconnaissance
 /// Orbiter. The configuration is done via the applications config file. See README.md for details.
@@ -30,7 +34,8 @@ class Plugin : public cs::core::PluginBase {
  private:
   Settings                             mPluginSettings;
   std::vector<std::shared_ptr<Sharad>> mSharads;
-  std::vector<VistaOpenGLNode*>        mSharadNodes;
+  VistaOpenGLNode*                     mSharadNode;
+  std::unique_ptr<SharadRenderer>      mSharadRenderer;
 
   cs::utils::Property<bool> mEnabled = false;
 };

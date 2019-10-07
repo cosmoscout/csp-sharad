@@ -6,9 +6,11 @@
 
 #include "Plugin.hpp"
 
+#include "Sharad.hpp"
+#include "SharadRenderer.hpp"
+
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
-#include "../../../src/cs-gui/GuiItem.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
@@ -63,13 +65,7 @@ void Plugin::init() {
               mPluginSettings.mFilePath + sName + "_tiff.tif",
               mPluginSettings.mFilePath + sName + "_geom.tab");
           mSolarSystem->registerAnchor(sharad);
-
-          auto sharadNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), sharad.get());
-          VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-              sharadNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 2);
-
           mSharads.push_back(sharad);
-          mSharadNodes.push_back(sharadNode);
 
           mGuiManager->getSideBar()->callJavascript(
               "add_sharad", sName, sharad->getStartExistence() + 10);
@@ -78,10 +74,15 @@ void Plugin::init() {
     }
   }
 
+  mSharadRenderer = std::make_unique<SharadRenderer>(mGraphicsEngine);
+  mSharadRenderer->setSharads(mSharads);
+
+  mSharadNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), mSharadRenderer.get());
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+      mSharadNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 2);
+
   mEnabled.onChange().connect([this](bool val) {
-    for (auto const& node : mSharadNodes) {
-      node->SetIsEnabled(val);
-    }
+    mSharadNode->SetIsEnabled(val);
   });
 
   mEnabled.touch();
@@ -97,9 +98,7 @@ void Plugin::deInit() {
     mSolarSystem->unregisterAnchor(sharad);
   }
 
-  for (auto const& node : mSharadNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(node);
-  }
+  mSceneGraph->GetRoot()->DisconnectChild(mSharadNode);
 
   mGuiManager->getSideBar()->unregisterCallback("set_enable_sharad");
 }

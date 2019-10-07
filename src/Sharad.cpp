@@ -23,88 +23,6 @@ namespace csp::sharad {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string Sharad::VERT = R"(
-#version 440 compatibility
-
-uniform mat4 uMatModelView;
-uniform mat4 uMatProjection;
-uniform float uHeightScale;
-uniform float uRadius;
-
-// inputs
-layout(location = 0) in vec3  iPosition;
-layout(location = 1) in vec2  iTexCoords;
-layout(location = 2) in float iTime;
-
-// outputs
-out vec3  vPosition;
-out vec2  vTexCoords;
-out float vTime;
-
-void main()
-{
-    vTexCoords = iTexCoords;
-    vTime      = iTime;
-
-    float height = vTexCoords.y < 0.5 ? 
-                        uRadius + 10000 * uHeightScale : 
-                        uRadius - 10100 * uHeightScale ;
-
-    vPosition   = (uMatModelView * vec4(iPosition * height, 1.0)).xyz;
-    gl_Position =  uMatProjection * vec4(vPosition, 1);
-}
-)";
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-const std::string Sharad::FRAG = R"(
-#version 440 compatibility
-
-uniform sampler2DRect uDepthBuffer;
-uniform sampler2D uSharadTexture;
-uniform float uAmbientBrightness;
-uniform float uTime;
-uniform float uSceneScale;
-uniform float uFarClip;
-uniform vec2 uViewportPos;
-
-// inputs
-in vec3  vPosition;
-in vec2  vTexCoords;
-in float vTime;
-
-// outputs
-layout(location = 0) out vec4 oColor;
-
-void main()
-{
-    if (vTime > uTime)
-    {
-        discard;
-    }
-
-    float sharadDistance  = length(vPosition);
-    float surfaceDistance = texture(uDepthBuffer, gl_FragCoord.xy - uViewportPos).r * uFarClip;
-    
-    if (sharadDistance < surfaceDistance)
-    {
-        discard;
-    }
-
-    float val = texture(uSharadTexture, vTexCoords).r;
-    val = mix(1, val, clamp((uTime - vTime), 0, 1));
-
-    oColor.r = pow(val,  0.5);
-    oColor.g = pow(val,  2.0);
-    oColor.b = pow(val, 10.0);
-    oColor.a = 1.0 - clamp((sharadDistance - surfaceDistance) * uSceneScale / 30000, 0.1, 1.0);
-
-    gl_FragDepth = sharadDistance / uFarClip;
-}
-)";
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 VistaTexture*                Sharad::mDepthBuffer     = nullptr;
 Sharad::FramebufferCallback* Sharad::mPreCallback     = nullptr;
 VistaOpenGLNode*             Sharad::mPreCallbackNode = nullptr;
@@ -236,11 +154,6 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   mVAO.EnableAttributeArray(2);
   mVAO.SpecifyAttributeArrayFloat(
       2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLuint)offsetof(Vertex, time), &mVBO);
-
-  // create sphere shader ----------------------------------------------------
-  mShader.InitVertexShaderFromString(VERT);
-  mShader.InitFragmentShaderFromString(FRAG);
-  mShader.Link();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -265,72 +178,6 @@ void Sharad::update(double tTime, cs::scene::CelestialObserver const& oObs) {
 
   mCurrTime   = tTime;
   mSceneScale = oObs.getAnchorScale();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-bool Sharad::Do() {
-  if (getIsInExistence()) {
-    cs::utils::FrameTimings::ScopedTimer timer("Sharad");
-
-    mShader.Bind();
-
-    // get modelview and projection matrices
-    GLfloat glMatMV[16], glMatP[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
-    glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
-    auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(getWorldTransform());
-    glUniformMatrix4fv(
-        mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
-    glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
-
-    GLint iViewport[4];
-    glGetIntegerv(GL_VIEWPORT, iViewport);
-    mShader.SetUniform(
-        mShader.GetUniformLocation("uViewportPos"), (float)iViewport[0], (float)iViewport[1]);
-
-    mShader.SetUniform(mShader.GetUniformLocation("uSharadTexture"), 0);
-    mShader.SetUniform(mShader.GetUniformLocation("uDepthBuffer"), 1);
-    mShader.SetUniform(mShader.GetUniformLocation("uSceneScale"), (float)mSceneScale);
-    mShader.SetUniform(
-        mShader.GetUniformLocation("uHeightScale"), mGraphicsEngine->pHeightScale.get());
-    mShader.SetUniform(mShader.GetUniformLocation("uRadius"),
-        (float)cs::core::SolarSystem::getRadii(getCenterName())[0]);
-    mShader.SetUniform(mShader.GetUniformLocation("uTime"), (float)(mCurrTime - mStartExistence));
-    mShader.SetUniform(
-        mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
-
-    mTexture->Bind(GL_TEXTURE0);
-    mDepthBuffer->Bind(GL_TEXTURE1);
-
-    glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // glDepthFunc(GL_GEQUAL);
-    // glDepthMask(false);
-    glDisable(GL_DEPTH_TEST);
-
-    // draw --------------------------------------------------------------------
-    mVAO.Bind();
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, mSamples * 2);
-    mVAO.Release();
-
-    // clean up ----------------------------------------------------------------
-    mTexture->Unbind(GL_TEXTURE0);
-
-    glPopAttrib();
-
-    mShader.Release();
-  }
-
-  return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-bool Sharad::GetBoundingBox(VistaBoundingBox& bb) {
-  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

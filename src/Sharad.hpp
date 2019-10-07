@@ -20,18 +20,19 @@ class VistaTexture;
 
 namespace csp::sharad {
 
+class SharadRenderer;
+
 /// Renders a single SHARAD image.
-class Sharad : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
+class Sharad : public cs::scene::CelestialObject {
+  friend SharadRenderer;
+
  public:
   Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine, VistaSceneGraph* sceneGraph,
       std::string const& sCenterName, std::string const& sFrameName, std::string const& sTiffFile,
       std::string const& sTabFile);
-  ~Sharad() override;
+  virtual ~Sharad();
 
   void update(double tTime, cs::scene::CelestialObserver const& oObs) override;
-
-  bool Do() override;
-  bool GetBoundingBox(VistaBoundingBox& bb) override;
 
  private:
   class FramebufferCallback : public IVistaOpenGLDraw {
@@ -55,16 +56,12 @@ class Sharad : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
   std::shared_ptr<VistaTexture>             mTexture;
 
-  VistaGLSLShader        mShader;
   VistaVertexArrayObject mVAO;
   VistaBufferObject      mVBO;
 
   int    mSamples;
   double mCurrTime   = -1.0;
   double mSceneScale = -1.0;
-
-  static const std::string VERT;
-  static const std::string FRAG;
 };
 
 } // namespace csp::sharad
