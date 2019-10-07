@@ -92,10 +92,9 @@ bool SharadRenderer::Do() {
 
   mShader.SetUniform(mUniforms.sharadTexture, 0);
   mShader.SetUniform(mUniforms.depthBuffer, 1);
-
   mShader.SetUniform(mUniforms.heightScale, mGraphicsEngine->pHeightScale.get());
-
   mShader.SetUniform(mUniforms.farClip, cs::utils::getCurrentFarClipDistance());
+  mShader.SetUniform(mUniforms.sceneScale, (float)mSceneScale);
 
   mDepthBuffer->Bind(GL_TEXTURE1);
 
@@ -105,10 +104,9 @@ bool SharadRenderer::Do() {
       auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(sharad->getWorldTransform());
       glUniformMatrix4fv(mUniforms.matModelView, 1, GL_FALSE, glm::value_ptr(matMV));
 
-      mShader.SetUniform(mUniforms.sceneScale, (float)sharad->mSceneScale);
       mShader.SetUniform(
           mUniforms.radius, (float)cs::core::SolarSystem::getRadii(sharad->getCenterName())[0]);
-      mShader.SetUniform(mUniforms.time, (float)(sharad->mCurrTime - sharad->mStartExistence));
+      mShader.SetUniform(mUniforms.time, (float)(mCurrTime - sharad->mStartExistence));
 
       sharad->mTexture->Bind(GL_TEXTURE0);
 
@@ -141,6 +139,18 @@ bool SharadRenderer::GetBoundingBox(VistaBoundingBox& bb) {
 
 void SharadRenderer::setSharads(std::vector<std::shared_ptr<Sharad>> const& sharads) {
   mSharads = sharads;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void SharadRenderer::setSceneScale(double sceneScale) {
+  mSceneScale = sceneScale;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void SharadRenderer::setCurrentTime(double currentTime) {
+  mCurrTime = currentTime;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

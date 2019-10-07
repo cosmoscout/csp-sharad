@@ -29,8 +29,14 @@ class SharadRenderer : public IVistaOpenGLDraw {
 
   void setSharads(std::vector<std::shared_ptr<Sharad>> const& sharads);
 
+  void setSceneScale(double sceneScale);
+  void setCurrentTime(double currentTime);
+
  private:
   VistaGLSLShader mShader;
+
+  double mCurrTime   = -1.0;
+  double mSceneScale = -1.0;
 
   struct {
     uint32_t matModelView;

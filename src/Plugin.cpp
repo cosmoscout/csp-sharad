@@ -11,6 +11,7 @@
 
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
+#include "../../../src/cs-core/TimeControl.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
@@ -100,6 +101,13 @@ void Plugin::deInit() {
   mSceneGraph->GetRoot()->DisconnectChild(mSharadNode);
 
   mGuiManager->getSideBar()->unregisterCallback("set_enable_sharad");
+}
+
+void Plugin::update() {
+  PluginBase::update();
+
+  mSharadRenderer->setCurrentTime(mTimeControl->pSimulationTime.get());
+  mSharadRenderer->setSceneScale(mSolarSystem->getObserver().getAnchorScale());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

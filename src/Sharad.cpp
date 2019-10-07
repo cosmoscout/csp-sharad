@@ -122,13 +122,4 @@ Sharad::Sharad(std::string const& sCenterName, std::string const& sFrameName,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void Sharad::update(double tTime, cs::scene::CelestialObserver const& oObs) {
-  cs::scene::CelestialObject::update(tTime, oObs);
-
-  mCurrTime   = tTime;
-  mSceneScale = oObs.getAnchorScale();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 } // namespace csp::sharad

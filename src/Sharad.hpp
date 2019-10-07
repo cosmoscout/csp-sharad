@@ -27,8 +27,6 @@ class Sharad : public cs::scene::CelestialObject {
       std::string const& sTiffFile, std::string const& sTabFile);
   virtual ~Sharad() = default;
 
-  void update(double tTime, cs::scene::CelestialObserver const& oObs) override;
-
  private:
   std::shared_ptr<VistaTexture> mTexture;
 
@@ -36,8 +34,6 @@ class Sharad : public cs::scene::CelestialObject {
   VistaBufferObject      mVBO;
 
   int    mSamples;
-  double mCurrTime   = -1.0;
-  double mSceneScale = -1.0;
 };
 
 } // namespace csp::sharad
