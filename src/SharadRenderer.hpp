@@ -9,8 +9,10 @@
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 #include <VistaOGLExt/VistaGLSLShader.h>
+#include <VistaOGLExt/VistaTexture.h>
 
 #include "../../../src/cs-core/GraphicsEngine.hpp"
+#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <memory>
 #include <vector>
 
@@ -28,7 +30,7 @@ class SharadRenderer : public IVistaOpenGLDraw {
   void setSharads(std::vector<std::shared_ptr<Sharad>> const& sharads);
 
  private:
-  VistaGLSLShader        mShader;
+  VistaGLSLShader mShader;
 
   struct {
     uint32_t matModelView;
@@ -46,8 +48,26 @@ class SharadRenderer : public IVistaOpenGLDraw {
   std::vector<std::shared_ptr<Sharad>> mSharads;
 
   std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
+
+  class FramebufferCallback : public IVistaOpenGLDraw {
+   public:
+    FramebufferCallback(VistaTexture* pDepthBuffer);
+
+    bool Do() override;
+
+    bool GetBoundingBox(VistaBoundingBox& bb) override {
+      return true;
+    }
+
+   private:
+    VistaTexture* mDepthBuffer;
+  };
+
+  std::unique_ptr<VistaTexture>        mDepthBuffer;
+  std::unique_ptr<FramebufferCallback> mPreCallback;
+  std::unique_ptr<VistaOpenGLNode>     mPreCallbackNode;
 };
 
-}
+} // namespace csp::sharad
 
 #endif // CSP_SHARAD_SHARAD_RENDERER_HPP

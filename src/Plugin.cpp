@@ -14,6 +14,7 @@
 
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
+#include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,8 +61,8 @@ void Plugin::init() {
         std::string             ext(path.extension().string());
 
         if (ext == ".tab") {
-          std::string sName = file.substr(0, file.length() - 5);
-          auto sharad = std::make_shared<Sharad>(mGraphicsEngine, mSceneGraph, "MARS", "IAU_Mars",
+          std::string sName  = file.substr(0, file.length() - 5);
+          auto        sharad = std::make_shared<Sharad>("MARS", "IAU_Mars",
               mPluginSettings.mFilePath + sName + "_tiff.tif",
               mPluginSettings.mFilePath + sName + "_geom.tab");
           mSolarSystem->registerAnchor(sharad);
@@ -81,9 +82,7 @@ void Plugin::init() {
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mSharadNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 2);
 
-  mEnabled.onChange().connect([this](bool val) {
-    mSharadNode->SetIsEnabled(val);
-  });
+  mEnabled.onChange().connect([this](bool val) { mSharadNode->SetIsEnabled(val); });
 
   mEnabled.touch();
 

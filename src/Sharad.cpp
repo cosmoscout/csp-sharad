@@ -9,24 +9,9 @@
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-graphics/TextureLoader.hpp"
 #include "../../../src/cs-scene/CelestialObserver.hpp"
-#include "../../../src/cs-utils/FrameTimings.hpp"
 #include "../../../src/cs-utils/convert.hpp"
-#include "../../../src/cs-utils/utils.hpp"
-
-#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
-#include <VistaKernel/VistaSystem.h>
-#include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
-
-#include <glm/gtc/type_ptr.hpp>
 
 namespace csp::sharad {
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-VistaTexture*                Sharad::mDepthBuffer     = nullptr;
-Sharad::FramebufferCallback* Sharad::mPreCallback     = nullptr;
-VistaOpenGLNode*             Sharad::mPreCallbackNode = nullptr;
-int                          Sharad::mInstanceCount   = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,33 +36,12 @@ struct ProfileRadarData {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
-    VistaSceneGraph* sceneGraph, std::string const& sCenterName, std::string const& sFrameName,
+Sharad::Sharad(std::string const& sCenterName, std::string const& sFrameName,
     std::string const& sTiffFile, std::string const& sTabFile)
     : cs::scene::CelestialObject(sCenterName, sFrameName, 0, 0)
-    , mGraphicsEngine(graphicsEngine)
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTiffFile)) {
   // arbitray date in future
   mEndExistence = cs::utils::convert::toSpiceTime("2040-01-01 00:00:00.000");
-
-  if (mInstanceCount == 0) {
-    mDepthBuffer = new VistaTexture(GL_TEXTURE_RECTANGLE);
-    mDepthBuffer->Bind();
-    mDepthBuffer->SetWrapS(GL_CLAMP);
-    mDepthBuffer->SetWrapT(GL_CLAMP);
-    mDepthBuffer->SetMinFilter(GL_NEAREST);
-    mDepthBuffer->SetMagFilter(GL_NEAREST);
-    mDepthBuffer->Unbind();
-
-    mPreCallback = new FramebufferCallback(mDepthBuffer);
-
-    mPreCallbackNode = sceneGraph->NewOpenGLNode(sceneGraph->GetRoot(), mPreCallback);
-
-    VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-        mPreCallbackNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 1);
-  }
-
-  ++mInstanceCount;
 
   // load metadata -----------------------------------------------------------
   FILE* pFile = fopen(sTabFile.c_str(), "r");
@@ -158,43 +122,11 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Sharad::~Sharad() {
-  --mInstanceCount;
-
-  if (mInstanceCount == 0) {
-    delete mPreCallback;
-    delete mDepthBuffer;
-    delete mPreCallbackNode;
-    mPreCallback     = nullptr;
-    mDepthBuffer     = nullptr;
-    mPreCallbackNode = nullptr;
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void Sharad::update(double tTime, cs::scene::CelestialObserver const& oObs) {
   cs::scene::CelestialObject::update(tTime, oObs);
 
   mCurrTime   = tTime;
   mSceneScale = oObs.getAnchorScale();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Sharad::FramebufferCallback::FramebufferCallback(VistaTexture* pDepthBuffer)
-    : mDepthBuffer(pDepthBuffer) {
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-bool Sharad::FramebufferCallback::Do() {
-  GLint iViewport[4];
-  glGetIntegerv(GL_VIEWPORT, iViewport);
-  mDepthBuffer->Bind();
-  glCopyTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, iViewport[0], iViewport[1],
-      iViewport[2], iViewport[3], 0);
-  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -14,6 +14,10 @@
 #include "../../../src/cs-utils/filesystem.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 
+#include <VistaKernel/VistaSystem.h>
+#include <VistaKernel/GraphicsManager/VistaGraphicsManager.h>
+#include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
+#include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 #include <VistaOGLExt/VistaTexture.h>
 
 namespace csp::sharad {
@@ -39,6 +43,24 @@ SharadRenderer::SharadRenderer(std::shared_ptr<cs::core::GraphicsEngine> const& 
   mUniforms.radius        = mShader.GetUniformLocation("uRadius");
   mUniforms.time          = mShader.GetUniformLocation("uTime");
   mUniforms.farClip       = mShader.GetUniformLocation("uFarClip");
+
+  mDepthBuffer = std::make_unique<VistaTexture>(GL_TEXTURE_RECTANGLE);
+  mDepthBuffer->Bind();
+  mDepthBuffer->SetWrapS(GL_CLAMP);
+  mDepthBuffer->SetWrapT(GL_CLAMP);
+  mDepthBuffer->SetMinFilter(GL_NEAREST);
+  mDepthBuffer->SetMagFilter(GL_NEAREST);
+  mDepthBuffer->Unbind();
+
+  mPreCallback = std::make_unique<FramebufferCallback>(mDepthBuffer.get());
+
+  auto sceneGraph = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+
+  mPreCallbackNode = std::unique_ptr<VistaOpenGLNode>(
+      sceneGraph->NewOpenGLNode(sceneGraph->GetRoot(), mPreCallback.get()));
+
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+      mPreCallbackNode.get(), static_cast<int>(cs::utils::DrawOrder::ePlanets) + 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +97,8 @@ bool SharadRenderer::Do() {
 
   mShader.SetUniform(mUniforms.farClip, cs::utils::getCurrentFarClipDistance());
 
+  mDepthBuffer->Bind(GL_TEXTURE1);
+
   for (const auto& sharad : mSharads) {
     if (sharad->getIsInExistence()) {
 
@@ -87,7 +111,6 @@ bool SharadRenderer::Do() {
       mShader.SetUniform(mUniforms.time, (float)(sharad->mCurrTime - sharad->mStartExistence));
 
       sharad->mTexture->Bind(GL_TEXTURE0);
-      sharad->mDepthBuffer->Bind(GL_TEXTURE1);
 
       // draw --------------------------------------------------------------------
       sharad->mVAO.Bind();
@@ -98,6 +121,8 @@ bool SharadRenderer::Do() {
       sharad->mTexture->Unbind(GL_TEXTURE0);
     }
   }
+
+  mDepthBuffer->Unbind(GL_TEXTURE1);
 
   glPopAttrib();
 
@@ -116,6 +141,23 @@ bool SharadRenderer::GetBoundingBox(VistaBoundingBox& bb) {
 
 void SharadRenderer::setSharads(std::vector<std::shared_ptr<Sharad>> const& sharads) {
   mSharads = sharads;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+SharadRenderer::FramebufferCallback::FramebufferCallback(VistaTexture* pDepthBuffer)
+    : mDepthBuffer(pDepthBuffer) {
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool SharadRenderer::FramebufferCallback::Do() {
+  GLint iViewport[4];
+  glGetIntegerv(GL_VIEWPORT, iViewport);
+  mDepthBuffer->Bind();
+  glCopyTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, iViewport[0], iViewport[1],
+      iViewport[2], iViewport[3], 0);
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
