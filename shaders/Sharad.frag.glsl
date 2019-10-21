@@ -1,4 +1,4 @@
-#version 440 compatibility
+#version 330
 
 uniform sampler2DRect uDepthBuffer;
 uniform sampler2D uSharadTexture;

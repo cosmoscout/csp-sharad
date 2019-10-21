@@ -1,4 +1,4 @@
-#version 440 compatibility
+#version 330
 
 uniform mat4 uMatModelView;
 uniform mat4 uMatProjection;
