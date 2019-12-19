@@ -46,8 +46,6 @@ void Plugin::init() {
   mGuiManager->addPluginTabToSideBarFromHTML(
       "SHARAD Profiles", "line_style", "../share/resources/gui/sharad-tab.html");
 
-  mGuiManager->addScriptToSideBarFromJS("../share/resources/gui/js/sharad-tab.js");
-
   boost::filesystem::path               dir(mPluginSettings.mFilePath);
   boost::filesystem::directory_iterator end_iter;
 
@@ -72,7 +70,7 @@ void Plugin::init() {
           mSharads.push_back(sharad);
           mSharadNodes.push_back(sharadNode);
 
-          mGuiManager->getSideBar()->callJavascript(
+          mGuiManager->getGui()->callJavascript(
               "CosmoScout.call", "sidebar", "addSharad", sName, sharad->getStartExistence() + 10);
         }
       }
@@ -87,7 +85,7 @@ void Plugin::init() {
 
   mEnabled.touch();
 
-  mGuiManager->getSideBar()->registerCallback<bool>(
+  mGuiManager->getGui()->registerCallback<bool>(
       "set_enable_sharad", ([this](bool enable) { mEnabled = enable; }));
 }
 
@@ -102,7 +100,7 @@ void Plugin::deInit() {
     mSceneGraph->GetRoot()->DisconnectChild(node);
   }
 
-  mGuiManager->getSideBar()->unregisterCallback("set_enable_sharad");
+  mGuiManager->getGui()->unregisterCallback("set_enable_sharad");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
