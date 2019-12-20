@@ -43,6 +43,10 @@ void Plugin::init() {
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-sharad");
 
+  mGuiManager->addHtmlToGui("sharad", "../share/resources/gui/sharad-template.html");
+
+  mGuiManager->addScriptToSideBarFromJS("../share/resources/gui/js/sharad.js");
+
   mGuiManager->addPluginTabToSideBarFromHTML(
       "SHARAD Profiles", "line_style", "../share/resources/gui/sharad-tab.html");
 
@@ -101,6 +105,7 @@ void Plugin::deInit() {
   }
 
   mGuiManager->getGui()->unregisterCallback("set_enable_sharad");
+  mGuiManager->getGui()->callJavascript("CosmoScout.unregisterHtml", "sharad");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
