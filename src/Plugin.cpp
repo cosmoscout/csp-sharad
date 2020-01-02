@@ -75,7 +75,7 @@ void Plugin::init() {
           mSharadNodes.push_back(sharadNode);
 
           mGuiManager->getGui()->callJavascript(
-              "CosmoScout.sharad.addSharad", sName, sharad->getStartExistence() + 10);
+              "CosmoScout.sharad.add", sName, sharad->getStartExistence() + 10);
         }
       }
     }
