@@ -9,6 +9,7 @@
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-gui/GuiItem.hpp"
+#include "../../../src/cs-utils/logger.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
@@ -38,8 +39,16 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Plugin::Plugin() {
+  // Create default logger for this plugin.
+  cs::utils::logger::init("csp-sharad");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Plugin::init() {
-  std::cout << "Loading: CosmoScout VR Plugin Sharad" << std::endl;
+
+  spdlog::info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-sharad");
 
@@ -89,11 +98,15 @@ void Plugin::init() {
 
   mGuiManager->getSideBar()->registerCallback<bool>(
       "set_enable_sharad", ([this](bool enable) { mEnabled = enable; }));
+
+  spdlog::info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
+  spdlog::info("Unloading plugin...");
+
   for (auto const& sharad : mSharads) {
     mSolarSystem->unregisterAnchor(sharad);
   }
@@ -103,6 +116,8 @@ void Plugin::deInit() {
   }
 
   mGuiManager->getSideBar()->unregisterCallback("set_enable_sharad");
+
+  spdlog::info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
