@@ -165,7 +165,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   FILE* pFile = fopen(sTabFile.c_str(), "r");
 
   if (pFile == nullptr) {
-    spdlog::error("Failed to open Shard file {}", sTabFile);
+    spdlog::error("Failed to add Sharad data: Cannot open file '{}'!", sTabFile);
     return;
   }
 
