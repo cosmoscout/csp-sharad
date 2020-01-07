@@ -6,7 +6,6 @@
 class SharadApi extends IApi {
   /**
    * @inheritDoc
-   * @type {string}
    */
   name = 'sharad';
 

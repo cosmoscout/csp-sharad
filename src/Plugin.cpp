@@ -45,7 +45,7 @@ void Plugin::init() {
 
   mGuiManager->addHtmlToGui("sharad", "../share/resources/gui/sharad-template.html");
 
-  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/sharad.js");
+  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-sharad.js");
 
   mGuiManager->addPluginTabToSideBarFromHTML(
       "SHARAD Profiles", "line_style", "../share/resources/gui/sharad-tab.html");
