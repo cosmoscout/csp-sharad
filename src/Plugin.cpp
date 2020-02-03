@@ -91,6 +91,18 @@ void Plugin::init() {
 
   mGuiManager->getGui()->registerCallback<bool>(
       "set_enable_sharad", ([this](bool enable) { mEnabled = enable; }));
+
+  mSolarSystem->pActiveBody.onChange().connect(
+      [this](std::shared_ptr<cs::scene::CelestialBody> const& body) {
+        bool enabled = false;
+
+        if (body->getCenterName() == "Mars") {
+          enabled = true;
+        }
+
+        mGuiManager->getGui()->callJavascript(
+            "CosmoScout.sidebar.setTabEnabled", "collapse-SHARAD-Profiles", enabled);
+      });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
