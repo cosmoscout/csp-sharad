@@ -43,10 +43,12 @@ void Plugin::init() {
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-sharad");
 
+  mGuiManager->addHtmlToGui("sharad", "../share/resources/gui/sharad-template.html");
+
+  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-sharad.js");
+
   mGuiManager->addPluginTabToSideBarFromHTML(
       "SHARAD Profiles", "line_style", "../share/resources/gui/sharad-tab.html");
-
-  mGuiManager->addScriptToSideBarFromJS("../share/resources/gui/js/sharad-tab.js");
 
   boost::filesystem::path               dir(mPluginSettings.mFilePath);
   boost::filesystem::directory_iterator end_iter;
@@ -72,8 +74,8 @@ void Plugin::init() {
           mSharads.push_back(sharad);
           mSharadNodes.push_back(sharadNode);
 
-          mGuiManager->getSideBar()->callJavascript(
-              "add_sharad", sName, sharad->getStartExistence() + 10);
+          mGuiManager->getGui()->callJavascript(
+              "CosmoScout.sharad.add", sName, sharad->getStartExistence() + 10);
         }
       }
     }
@@ -87,8 +89,20 @@ void Plugin::init() {
 
   mEnabled.touch();
 
-  mGuiManager->getSideBar()->registerCallback<bool>(
+  mGuiManager->getGui()->registerCallback<bool>(
       "set_enable_sharad", ([this](bool enable) { mEnabled = enable; }));
+
+  mSolarSystem->pActiveBody.onChange().connect(
+      [this](std::shared_ptr<cs::scene::CelestialBody> const& body) {
+        bool enabled = false;
+
+        if (body->getCenterName() == "Mars") {
+          enabled = true;
+        }
+
+        mGuiManager->getGui()->callJavascript(
+            "CosmoScout.sidebar.setTabEnabled", "collapse-SHARAD-Profiles", enabled);
+      });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +116,8 @@ void Plugin::deInit() {
     mSceneGraph->GetRoot()->DisconnectChild(node);
   }
 
-  mGuiManager->getSideBar()->unregisterCallback("set_enable_sharad");
+  mGuiManager->getGui()->unregisterCallback("set_enable_sharad");
+  mGuiManager->getGui()->callJavascript("CosmoScout.unregisterHtml", "sharad");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
