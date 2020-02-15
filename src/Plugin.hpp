@@ -34,7 +34,8 @@ class Plugin : public cs::core::PluginBase {
   std::vector<std::shared_ptr<Sharad>> mSharads;
   std::vector<VistaOpenGLNode*>        mSharadNodes;
 
-  cs::utils::Property<bool> mEnabled = false;
+  cs::utils::Property<bool> mEnabled              = false;
+  int                       mActiveBodyConnection = -1;
 };
 
 } // namespace csp::sharad
