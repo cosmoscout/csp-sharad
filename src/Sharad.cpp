@@ -16,8 +16,8 @@
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
-
 #include <glm/gtc/type_ptr.hpp>
+#include <spdlog/spdlog.h>
 
 namespace csp::sharad {
 
@@ -165,7 +165,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   FILE* pFile = fopen(sTabFile.c_str(), "r");
 
   if (pFile == nullptr) {
-    std::cout << "Failed to open Shard file " << sTabFile << std::endl;
+    spdlog::error("Failed to add Sharad data: Cannot open file '{}'!", sTabFile);
     return;
   }
 

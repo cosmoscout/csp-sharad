@@ -9,6 +9,7 @@
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-gui/GuiItem.hpp"
+#include "../../../src/cs-utils/logger.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaTransformNode.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
@@ -38,8 +39,16 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Plugin::Plugin() {
+  // Create default logger for this plugin.
+  spdlog::set_default_logger(cs::utils::logger::createLogger("csp-sharad"));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Plugin::init() {
-  std::cout << "Loading: CosmoScout VR Plugin Sharad" << std::endl;
+
+  spdlog::info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-sharad");
 
@@ -103,11 +112,15 @@ void Plugin::init() {
         mGuiManager->getGui()->callJavascript(
             "CosmoScout.sidebar.setTabEnabled", "collapse-SHARAD-Profiles", enabled);
       });
+
+  spdlog::info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
+  spdlog::info("Unloading plugin...");
+
   for (auto const& sharad : mSharads) {
     mSolarSystem->unregisterAnchor(sharad);
   }
@@ -117,9 +130,10 @@ void Plugin::deInit() {
   }
 
   mSolarSystem->pActiveBody.onChange().disconnect(mActiveBodyConnection);
-
   mGuiManager->getGui()->unregisterCallback("set_enable_sharad");
   mGuiManager->getGui()->callJavascript("CosmoScout.unregisterHtml", "sharad");
+
+  spdlog::info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
