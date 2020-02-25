@@ -99,7 +99,7 @@ void Plugin::init() {
   mEnabled.touch();
 
   mGuiManager->getGui()->registerCallback<bool>(
-      "set_enable_sharad", ([this](bool enable) { mEnabled = enable; }));
+      "setEnableSharad", ([this](bool enable) { mEnabled = enable; }));
 
   mActiveBodyConnection = mSolarSystem->pActiveBody.onChange().connect(
       [this](std::shared_ptr<cs::scene::CelestialBody> const& body) {
@@ -130,7 +130,7 @@ void Plugin::deInit() {
   }
 
   mSolarSystem->pActiveBody.onChange().disconnect(mActiveBodyConnection);
-  mGuiManager->getGui()->unregisterCallback("set_enable_sharad");
+  mGuiManager->getGui()->unregisterCallback("setEnableSharad");
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.unregisterHtml", "sharad");
 
   spdlog::info("Unloading done.");
