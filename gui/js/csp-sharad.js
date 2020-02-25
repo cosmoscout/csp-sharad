@@ -25,8 +25,6 @@ class SharadApi extends IApi {
     sharad.classList.add(`item-${file}`);
 
     sharadList.appendChild(sharad);
-
-    CosmoScout.gui.initDataCalls();
   }
 }
 
