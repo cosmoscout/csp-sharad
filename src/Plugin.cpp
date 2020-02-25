@@ -131,7 +131,7 @@ void Plugin::deInit() {
 
   mSolarSystem->pActiveBody.onChange().disconnect(mActiveBodyConnection);
   mGuiManager->getGui()->unregisterCallback("set_enable_sharad");
-  mGuiManager->getGui()->callJavascript("CosmoScout.unregisterHtml", "sharad");
+  mGuiManager->getGui()->callJavascript("CosmoScout.gui.unregisterHtml", "sharad");
 
   spdlog::info("Unloading done.");
 }

@@ -15,7 +15,7 @@ class SharadApi extends IApi {
    */
   add(file, time) {
     const sharadList = document.getElementById('list-sharad');
-    const sharad = CosmoScout.loadTemplateContent('sharad');
+    const sharad = CosmoScout.gui.loadTemplateContent('sharad');
 
     sharad.innerHTML = sharad.innerHTML
       .replace(this.regex('FILE'), file)
@@ -26,7 +26,7 @@ class SharadApi extends IApi {
 
     sharadList.appendChild(sharad);
 
-    CosmoScout.initDataCalls();
+    CosmoScout.gui.initDataCalls();
   }
 }
 
