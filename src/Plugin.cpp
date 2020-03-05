@@ -98,8 +98,8 @@ void Plugin::init() {
 
   mEnabled.touch();
 
-  mGuiManager->getGui()->registerCallback<bool>(
-      "sharad.setEnabled", ([this](bool enable) { mEnabled = enable; }));
+  mGuiManager->getGui()->registerCallback(
+      "sharad.setEnabled", std::function([this](bool enable) { mEnabled = enable; }));
 
   mActiveBodyConnection = mSolarSystem->pActiveBody.onChange().connect(
       [this](std::shared_ptr<cs::scene::CelestialBody> const& body) {
