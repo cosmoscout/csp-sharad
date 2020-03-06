@@ -15,18 +15,16 @@ class SharadApi extends IApi {
    */
   add(file, time) {
     const sharadList = document.getElementById('list-sharad');
-    const sharad = CosmoScout.loadTemplateContent('sharad');
+    const sharad = CosmoScout.gui.loadTemplateContent('sharad');
 
     sharad.innerHTML = sharad.innerHTML
-      .replace(this.regex('FILE'), file)
-      .replace(this.regex('TIME'), time)
+      .replace(/%FILE%/g, file)
+      .replace(/%TIME%/g, time)
       .trim();
 
     sharad.classList.add(`item-${file}`);
 
     sharadList.appendChild(sharad);
-
-    CosmoScout.initDataCalls();
   }
 }
 
