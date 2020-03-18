@@ -30,9 +30,9 @@ class Plugin : public cs::core::PluginBase {
   void deInit() override;
 
  private:
-  Settings                             mPluginSettings;
-  std::vector<std::shared_ptr<Sharad>> mSharads;
-  std::vector<VistaOpenGLNode*>        mSharadNodes;
+  Settings                                      mPluginSettings;
+  std::vector<std::shared_ptr<Sharad>>          mSharads;
+  std::vector<std::unique_ptr<VistaOpenGLNode>> mSharadNodes;
 
   cs::utils::Property<bool> mEnabled              = false;
   int                       mActiveBodyConnection = -1;

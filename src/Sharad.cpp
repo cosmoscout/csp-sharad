@@ -13,6 +13,7 @@
 #include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 
+#include <VistaKernel/GraphicsManager/VistaGroupNode.h>
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
@@ -134,8 +135,8 @@ struct ProfileRadarData {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
-    VistaSceneGraph* sceneGraph, std::string const& sCenterName, std::string const& sFrameName,
-    std::string const& sTiffFile, std::string const& sTabFile)
+    std::string const& sCenterName, std::string const& sFrameName, std::string const& sTiffFile,
+    std::string const& sTabFile)
     : cs::scene::CelestialObject(sCenterName, sFrameName, 0, 0)
     , mGraphicsEngine(graphicsEngine)
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTiffFile)) {
@@ -153,6 +154,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
 
     mPreCallback = new FramebufferCallback(mDepthBuffer);
 
+    auto sceneGraph  = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
     mPreCallbackNode = sceneGraph->NewOpenGLNode(sceneGraph->GetRoot(), mPreCallback);
 
     VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
@@ -249,6 +251,9 @@ Sharad::~Sharad() {
   --mInstanceCount;
 
   if (mInstanceCount == 0) {
+    auto sceneGraph = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+    sceneGraph->GetRoot()->DisconnectChild(mPreCallbackNode);
+
     delete mPreCallback;
     delete mDepthBuffer;
     delete mPreCallbackNode;

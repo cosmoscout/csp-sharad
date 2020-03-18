@@ -23,9 +23,8 @@ namespace csp::sharad {
 /// Renders a single SHARAD image.
 class Sharad : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
  public:
-  Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine, VistaSceneGraph* sceneGraph,
-      std::string const& sCenterName, std::string const& sFrameName, std::string const& sTiffFile,
-      std::string const& sTabFile);
+  Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine, std::string const& sCenterName,
+      std::string const& sFrameName, std::string const& sTiffFile, std::string const& sTabFile);
   ~Sharad() override;
 
   void update(double tTime, cs::scene::CelestialObserver const& oObs) override;
