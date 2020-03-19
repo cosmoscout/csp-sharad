@@ -52,7 +52,7 @@ class Sharad : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   static int                  mInstanceCount;
 
   std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
-  std::shared_ptr<VistaTexture>             mTexture;
+  std::unique_ptr<VistaTexture>             mTexture;
 
   VistaGLSLShader        mShader;
   VistaVertexArrayObject mVAO;
