@@ -111,7 +111,7 @@ void Plugin::init() {
         }
 
         mGuiManager->getGui()->callJavascript(
-            "CosmoScout.sidebar.setTabEnabled", "collapse-SHARAD-Profiles", enabled);
+            "CosmoScout.sidebar.setTabEnabled", "SHARAD Profiles", enabled);
       });
   mSolarSystem->pActiveBody.touchFor(mActiveBodyConnection);
 
