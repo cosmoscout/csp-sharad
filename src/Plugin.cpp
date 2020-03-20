@@ -70,8 +70,8 @@ void Plugin::init() {
         std::string             ext(path.extension().string());
 
         if (ext == ".tab") {
-          std::string sName = file.substr(0, file.length() - 5);
-          auto sharad = std::make_shared<Sharad>(mGraphicsEngine, mSceneGraph, "MARS", "IAU_Mars",
+          std::string sName  = file.substr(0, file.length() - 5);
+          auto        sharad = std::make_shared<Sharad>(mGraphicsEngine, "MARS", "IAU_Mars",
               mPluginSettings.mFilePath + sName + "_tiff.tif",
               mPluginSettings.mFilePath + sName + "_geom.tab");
           mSolarSystem->registerAnchor(sharad);
@@ -81,7 +81,7 @@ void Plugin::init() {
               sharadNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 2);
 
           mSharads.push_back(sharad);
-          mSharadNodes.push_back(sharadNode);
+          mSharadNodes.emplace_back(sharadNode);
 
           mGuiManager->getGui()->callJavascript(
               "CosmoScout.sharad.add", sName, sharad->getStartExistence() + 10);
@@ -90,19 +90,17 @@ void Plugin::init() {
     }
   }
 
-  mEnabled.onChange().connect([this](bool val) {
+  mEnabled.connectAndTouch([this](bool val) {
     for (auto const& node : mSharadNodes) {
       node->SetIsEnabled(val);
     }
   });
 
-  mEnabled.touch();
-
   mGuiManager->getGui()->registerCallback("sharad.setEnabled",
       "Enables or disables the rendering of SHARAD profiles.",
       std::function([this](bool enable) { mEnabled = enable; }));
 
-  mActiveBodyConnection = mSolarSystem->pActiveBody.onChange().connect(
+  mActiveBodyConnection = mSolarSystem->pActiveBody.connectAndTouch(
       [this](std::shared_ptr<cs::scene::CelestialBody> const& body) {
         bool enabled = false;
 
@@ -111,7 +109,7 @@ void Plugin::init() {
         }
 
         mGuiManager->getGui()->callJavascript(
-            "CosmoScout.sidebar.setTabEnabled", "collapse-SHARAD-Profiles", enabled);
+            "CosmoScout.sidebar.setTabEnabled", "SHARAD Profiles", enabled);
       });
 
   spdlog::info("Loading done.");
@@ -127,10 +125,12 @@ void Plugin::deInit() {
   }
 
   for (auto const& node : mSharadNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(node);
+    mSceneGraph->GetRoot()->DisconnectChild(node.get());
   }
 
-  mSolarSystem->pActiveBody.onChange().disconnect(mActiveBodyConnection);
+  mGuiManager->removePluginTab("SHARAD Profiles");
+
+  mSolarSystem->pActiveBody.disconnect(mActiveBodyConnection);
   mGuiManager->getGui()->unregisterCallback("sharad.setEnabled");
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.unregisterHtml", "sharad");
 
