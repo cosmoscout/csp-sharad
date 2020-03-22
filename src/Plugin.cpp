@@ -74,7 +74,7 @@ void Plugin::init() {
 
         if (ext == ".tab") {
           std::string sName  = file.substr(0, file.length() - 5);
-          auto        sharad = std::make_shared<Sharad>(mGraphicsEngine, "MARS", "IAU_Mars",
+          auto        sharad = std::make_shared<Sharad>(mAllSettings, "MARS", "IAU_Mars",
               mPluginSettings.mFilePath + sName + "_tiff.tif",
               mPluginSettings.mFilePath + sName + "_geom.tab");
           mSolarSystem->registerAnchor(sharad);

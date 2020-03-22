@@ -7,7 +7,7 @@
 #ifndef CSP_SHARAD_HPP
 #define CSP_SHARAD_HPP
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-scene/CelestialObject.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
@@ -23,7 +23,7 @@ namespace csp::sharad {
 /// Renders a single SHARAD image.
 class Sharad : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
  public:
-  Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine, std::string const& sCenterName,
+  Sharad(std::shared_ptr<cs::core::Settings> settings, std::string const& sCenterName,
       std::string const& sFrameName, std::string const& sTiffFile, std::string const& sTabFile);
   ~Sharad() override;
 
@@ -51,8 +51,8 @@ class Sharad : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   static VistaOpenGLNode*     mPreCallbackNode;
   static int                  mInstanceCount;
 
-  std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
-  std::unique_ptr<VistaTexture>             mTexture;
+  std::shared_ptr<cs::core::Settings> mSettings;
+  std::unique_ptr<VistaTexture>       mTexture;
 
   VistaGLSLShader        mShader;
   VistaVertexArrayObject mVAO;

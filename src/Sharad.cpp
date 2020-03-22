@@ -134,11 +134,10 @@ struct ProfileRadarData {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
-    std::string const& sCenterName, std::string const& sFrameName, std::string const& sTiffFile,
-    std::string const& sTabFile)
+Sharad::Sharad(std::shared_ptr<cs::core::Settings> settings, std::string const& sCenterName,
+    std::string const& sFrameName, std::string const& sTiffFile, std::string const& sTabFile)
     : cs::scene::CelestialObject(sCenterName, sFrameName, 0, 0)
-    , mGraphicsEngine(graphicsEngine)
+    , mSettings(settings)
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTiffFile)) {
   // arbitray date in future
   mEndExistence = cs::utils::convert::toSpiceTime("2040-01-01 00:00:00.000");
@@ -298,7 +297,7 @@ bool Sharad::Do() {
     mShader.SetUniform(mShader.GetUniformLocation("uDepthBuffer"), 1);
     mShader.SetUniform(mShader.GetUniformLocation("uSceneScale"), (float)mSceneScale);
     mShader.SetUniform(
-        mShader.GetUniformLocation("uHeightScale"), mGraphicsEngine->pHeightScale.get());
+        mShader.GetUniformLocation("uHeightScale"), mSettings->mGraphics.pHeightScale.get());
     mShader.SetUniform(mShader.GetUniformLocation("uRadius"),
         (float)cs::core::SolarSystem::getRadii(getCenterName())[0]);
     mShader.SetUniform(mShader.GetUniformLocation("uTime"), (float)(mCurrTime - mStartExistence));
