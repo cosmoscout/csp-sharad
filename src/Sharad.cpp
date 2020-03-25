@@ -166,7 +166,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   ++mInstanceCount;
 
   // load metadata -----------------------------------------------------------
-  FILE* pFile = nullptr;
+  FILE*   pFile = nullptr;
   errno_t error = fopen_s(&pFile, sTabFile.c_str(), "r");
 
   if (pFile == nullptr || error) {
