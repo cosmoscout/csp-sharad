@@ -165,11 +165,16 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
 
   ++mInstanceCount;
 
-  // load metadata -----------------------------------------------------------
-  FILE*   pFile = nullptr;
-  errno_t error = fopen_s(&pFile, sTabFile.c_str(), "r");
+// Disables a warning in MSVC about using fopen_s and fscanf_s, which aren't supported in GCC.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
 
-  if (pFile == nullptr || error) {
+  // load metadata -----------------------------------------------------------
+  FILE* pFile = fopen(sTabFile.c_str(), "r");
+
+  if (pFile == nullptr) {
     spdlog::error("Failed to add Sharad data: Cannot open file '{}'!", sTabFile);
     return;
   }
@@ -180,13 +185,17 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
     ProfileRadarData dataElement;
 
     // Scan the File, this is specific to the one SHARAD we currently have
-    fscanf_s(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
+    fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
         &dataElement.Year, &dataElement.Month, &dataElement.Day, &dataElement.Hour,
         &dataElement.Minute, &dataElement.Second, &dataElement.Millisecond, &dataElement.Latitude,
         &dataElement.Longitude, &dataElement.SurfaceAltitude, &dataElement.MROAltitude,
         &dataElement.c, &dataElement.d, &dataElement.e, &dataElement.f);
     meta.push_back(dataElement);
   }
+
+#ifdef _MSVC_VER
+#pragma warning(pop)
+#endif
 
   mSamples = (int)meta.size();
 
