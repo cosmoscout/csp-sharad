@@ -166,7 +166,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   ++mInstanceCount;
 
   // Disables a warning in MSVC about using fopen_s and fscanf_s, which aren't supported in GCC.
-  CS_WARNING_PUSH
+  CS_WARNINGS_PUSH
   CS_DISABLE_MSVC_WARNING(4996)
 
   // load metadata -----------------------------------------------------------
@@ -195,7 +195,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
     }
   }
 
-  CS_WARNING_POP
+  CS_WARNINGS_POP
 
   mSamples = (int)meta.size();
 
