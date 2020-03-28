@@ -165,11 +165,9 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
 
   ++mInstanceCount;
 
-// Disables a warning in MSVC about using fopen_s and fscanf_s, which aren't supported in GCC.
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#endif
+  // Disables a warning in MSVC about using fopen_s and fscanf_s, which aren't supported in GCC.
+  CS_WARNINGS_PUSH
+  CS_DISABLE_MSVC_WARNING(4996)
 
   // load metadata -----------------------------------------------------------
   FILE* pFile = fopen(sTabFile.c_str(), "r");
@@ -197,9 +195,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
     }
   }
 
-#ifdef _MSVC_VER
-#pragma warning(pop)
-#endif
+  CS_WARNINGS_POP
 
   mSamples = (int)meta.size();
 
