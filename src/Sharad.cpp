@@ -21,6 +21,7 @@
 #include <spdlog/spdlog.h>
 
 #include <cstdio>
+#include <utility>
 
 namespace csp::sharad {
 
@@ -140,7 +141,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
     std::string const& sCenterName, std::string const& sFrameName, std::string const& sTiffFile,
     std::string const& sTabFile)
     : cs::scene::CelestialObject(sCenterName, sFrameName, 0, 0)
-    , mGraphicsEngine(graphicsEngine)
+    , mGraphicsEngine(std::move(std::move(graphicsEngine)))
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTiffFile)) {
   // arbitray date in future
   mEndExistence = cs::utils::convert::toSpiceTime("2040-01-01 00:00:00.000");
@@ -180,7 +181,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   std::vector<ProfileRadarData> meta;
 
   while (fgetc(pFile) != EOF) {
-    ProfileRadarData dataElement;
+    ProfileRadarData dataElement{};
 
     // Scan the File, this is specific to the one SHARAD we currently have
     if (fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
