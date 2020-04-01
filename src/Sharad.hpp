@@ -16,6 +16,8 @@
 #include <VistaOGLExt/VistaGLSLShader.h>
 #include <VistaOGLExt/VistaVertexArrayObject.h>
 
+#include <memory>
+
 class VistaTexture;
 
 namespace csp::sharad {
@@ -46,10 +48,10 @@ class Sharad : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
     VistaTexture* mDepthBuffer;
   };
 
-  static VistaTexture*        mDepthBuffer;
-  static FramebufferCallback* mPreCallback;
-  static VistaOpenGLNode*     mPreCallbackNode;
-  static int                  mInstanceCount;
+  static std::unique_ptr<VistaTexture>        mDepthBuffer;
+  static std::unique_ptr<FramebufferCallback> mPreCallback;
+  static std::unique_ptr<VistaOpenGLNode>     mPreCallbackNode;
+  static int                                  mInstanceCount;
 
   std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
   std::unique_ptr<VistaTexture>             mTexture;
@@ -62,8 +64,8 @@ class Sharad : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   double mCurrTime   = -1.0;
   double mSceneScale = -1.0;
 
-  static const std::string VERT;
-  static const std::string FRAG;
+  static const char* VERT;
+  static const char* FRAG;
 };
 
 } // namespace csp::sharad
