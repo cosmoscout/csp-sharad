@@ -185,8 +185,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   ProfileRadarData dataElement{};
 
   // Scan the File, this is specific to the one SHARAD we currently have
-  // NOLINTNEXTLINE(cert-err34-c)
-  while (
+  while ( // NOLINTNEXTLINE(cert-err34-c)
       fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
           &dataElement.Year, &dataElement.Month, &dataElement.Day, &dataElement.Hour,
           &dataElement.Minute, &dataElement.Second, &dataElement.Millisecond, &dataElement.Latitude,
