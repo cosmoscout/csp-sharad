@@ -20,6 +20,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <spdlog/spdlog.h>
 
+#include <cstdio>
+
 namespace csp::sharad {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +164,10 @@ Sharad::Sharad(std::shared_ptr<cs::core::Settings> settings, std::string const& 
 
   ++mInstanceCount;
 
+  // Disables a warning in MSVC about using fopen_s and fscanf_s, which aren't supported in GCC.
+  CS_WARNINGS_PUSH
+  CS_DISABLE_MSVC_WARNING(4996)
+
   // load metadata -----------------------------------------------------------
   FILE* pFile = fopen(sTabFile.c_str(), "r");
 
@@ -176,13 +182,19 @@ Sharad::Sharad(std::shared_ptr<cs::core::Settings> settings, std::string const& 
     ProfileRadarData dataElement;
 
     // Scan the File, this is specific to the one SHARAD we currently have
-    fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
-        &dataElement.Year, &dataElement.Month, &dataElement.Day, &dataElement.Hour,
-        &dataElement.Minute, &dataElement.Second, &dataElement.Millisecond, &dataElement.Latitude,
-        &dataElement.Longitude, &dataElement.SurfaceAltitude, &dataElement.MROAltitude,
-        &dataElement.c, &dataElement.d, &dataElement.e, &dataElement.f);
-    meta.push_back(dataElement);
+    if (fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
+            &dataElement.Year, &dataElement.Month, &dataElement.Day, &dataElement.Hour,
+            &dataElement.Minute, &dataElement.Second, &dataElement.Millisecond,
+            &dataElement.Latitude, &dataElement.Longitude, &dataElement.SurfaceAltitude,
+            &dataElement.MROAltitude, &dataElement.c, &dataElement.d, &dataElement.e,
+            &dataElement.f) == 16) {
+      meta.push_back(dataElement);
+    } else {
+      spdlog::warn("Failed to read some Sharad data from file '{}'!", sTabFile);
+    }
   }
+
+  CS_WARNINGS_POP
 
   mSamples = (int)meta.size();
 
