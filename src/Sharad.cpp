@@ -21,12 +21,13 @@
 #include <spdlog/spdlog.h>
 
 #include <cstdio>
+#include <utility>
 
 namespace csp::sharad {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string Sharad::VERT = R"(
+const char* Sharad::VERT = R"(
 #version 330
 
 uniform mat4 uMatModelView;
@@ -60,7 +61,7 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string Sharad::FRAG = R"(
+const char* Sharad::FRAG = R"(
 #version 330
 
 uniform sampler2DRect uDepthBuffer;
@@ -108,10 +109,10 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VistaTexture*                Sharad::mDepthBuffer     = nullptr;
-Sharad::FramebufferCallback* Sharad::mPreCallback     = nullptr;
-VistaOpenGLNode*             Sharad::mPreCallbackNode = nullptr;
-int                          Sharad::mInstanceCount   = 0;
+std::unique_ptr<VistaTexture>                Sharad::mDepthBuffer     = nullptr;
+std::unique_ptr<Sharad::FramebufferCallback> Sharad::mPreCallback     = nullptr;
+std::unique_ptr<VistaOpenGLNode>             Sharad::mPreCallbackNode = nullptr;
+int                                          Sharad::mInstanceCount   = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -140,13 +141,13 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
     std::string const& sCenterName, std::string const& sFrameName, std::string const& sTiffFile,
     std::string const& sTabFile)
     : cs::scene::CelestialObject(sCenterName, sFrameName, 0, 0)
-    , mGraphicsEngine(graphicsEngine)
+    , mGraphicsEngine(std::move(std::move(graphicsEngine)))
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTiffFile)) {
   // arbitray date in future
   mEndExistence = cs::utils::convert::toSpiceTime("2040-01-01 00:00:00.000");
 
   if (mInstanceCount == 0) {
-    mDepthBuffer = new VistaTexture(GL_TEXTURE_RECTANGLE);
+    mDepthBuffer = std::make_unique<VistaTexture>(GL_TEXTURE_RECTANGLE);
     mDepthBuffer->Bind();
     mDepthBuffer->SetWrapS(GL_CLAMP);
     mDepthBuffer->SetWrapT(GL_CLAMP);
@@ -154,13 +155,14 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
     mDepthBuffer->SetMagFilter(GL_NEAREST);
     mDepthBuffer->Unbind();
 
-    mPreCallback = new FramebufferCallback(mDepthBuffer);
+    mPreCallback = std::make_unique<FramebufferCallback>(mDepthBuffer.get());
 
-    auto sceneGraph  = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
-    mPreCallbackNode = sceneGraph->NewOpenGLNode(sceneGraph->GetRoot(), mPreCallback);
+    auto* sceneGraph = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+    mPreCallbackNode = std::unique_ptr<VistaOpenGLNode>(
+        sceneGraph->NewOpenGLNode(sceneGraph->GetRoot(), mPreCallback.get()));
 
     VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-        mPreCallbackNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 1);
+        mPreCallbackNode.get(), static_cast<int>(cs::utils::DrawOrder::ePlanets) + 1);
   }
 
   ++mInstanceCount;
@@ -170,6 +172,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   CS_DISABLE_MSVC_WARNING(4996)
 
   // load metadata -----------------------------------------------------------
+  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
   FILE* pFile = fopen(sTabFile.c_str(), "r");
 
   if (pFile == nullptr) {
@@ -180,9 +183,10 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   std::vector<ProfileRadarData> meta;
 
   while (fgetc(pFile) != EOF) {
-    ProfileRadarData dataElement;
+    ProfileRadarData dataElement{};
 
     // Scan the File, this is specific to the one SHARAD we currently have
+    // NOLINTNEXTLINE(cert-err34-c)
     if (fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
             &dataElement.Year, &dataElement.Month, &dataElement.Day, &dataElement.Hour,
             &dataElement.Minute, &dataElement.Second, &dataElement.Millisecond,
@@ -197,8 +201,9 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
 
   CS_WARNINGS_POP
 
-  mSamples = (int)meta.size();
+  mSamples = static_cast<int>(meta.size());
 
+  // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
   fclose(pFile);
 
   // create geometry ---------------------------------------------------------
@@ -225,14 +230,14 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
         cs::utils::convert::toRadians(glm::dvec2(meta[i].Longitude, meta[i].Latitude)));
     glm::dvec3 point = cs::utils::convert::toCartesian(lngLat, 1.0, 1.0);
 
-    float x    = 1.f * i / (mSamples - 1.f);
-    auto  time = (float)(tTime - mStartExistence);
+    float x    = 1.F * static_cast<float>(i) / (static_cast<float>(mSamples) - 1.F);
+    auto  time = static_cast<float>(tTime - mStartExistence);
 
     vertices[i * 2 + 0].pos  = point;
-    vertices[i * 2 + 0].tc   = glm::vec2(x, 1.f);
+    vertices[i * 2 + 0].tc   = glm::vec2(x, 1.F);
     vertices[i * 2 + 0].time = time;
     vertices[i * 2 + 1].pos  = point;
-    vertices[i * 2 + 1].tc   = glm::vec2(x, 0.f);
+    vertices[i * 2 + 1].tc   = glm::vec2(x, 0.F);
     vertices[i * 2 + 1].time = time;
   }
 
@@ -245,11 +250,11 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
 
   mVAO.EnableAttributeArray(1);
   mVAO.SpecifyAttributeArrayFloat(
-      1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLuint)offsetof(Vertex, tc), &mVBO);
+      1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), static_cast<GLuint>(offsetof(Vertex, tc)), &mVBO);
 
   mVAO.EnableAttributeArray(2);
   mVAO.SpecifyAttributeArrayFloat(
-      2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLuint)offsetof(Vertex, time), &mVBO);
+      2, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), static_cast<GLuint>(offsetof(Vertex, time)), &mVBO);
 
   // create sphere shader ----------------------------------------------------
   mShader.InitVertexShaderFromString(VERT);
@@ -263,15 +268,12 @@ Sharad::~Sharad() {
   --mInstanceCount;
 
   if (mInstanceCount == 0) {
-    auto sceneGraph = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
-    sceneGraph->GetRoot()->DisconnectChild(mPreCallbackNode);
+    auto* sceneGraph = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+    sceneGraph->GetRoot()->DisconnectChild(mPreCallbackNode.get());
 
-    delete mPreCallback;
-    delete mDepthBuffer;
-    delete mPreCallbackNode;
-    mPreCallback     = nullptr;
-    mDepthBuffer     = nullptr;
-    mPreCallbackNode = nullptr;
+    mPreCallback.reset(nullptr);
+    mDepthBuffer.reset(nullptr);
+    mPreCallbackNode.reset(nullptr);
   }
 }
 
@@ -293,27 +295,29 @@ bool Sharad::Do() {
     mShader.Bind();
 
     // get modelview and projection matrices
-    GLfloat glMatMV[16], glMatP[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
-    glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
-    auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(getWorldTransform());
+    std::array<GLfloat, 16> glMatMV{};
+    std::array<GLfloat, 16> glMatP{};
+    glGetFloatv(GL_MODELVIEW_MATRIX, glMatMV.data());
+    glGetFloatv(GL_PROJECTION_MATRIX, glMatP.data());
+    auto matMV = glm::make_mat4x4(glMatMV.data()) * glm::mat4(getWorldTransform());
     glUniformMatrix4fv(
         mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
-    glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+    glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
-    GLint iViewport[4];
-    glGetIntegerv(GL_VIEWPORT, iViewport);
-    mShader.SetUniform(
-        mShader.GetUniformLocation("uViewportPos"), (float)iViewport[0], (float)iViewport[1]);
+    std::array<GLint, 4> iViewport{};
+    glGetIntegerv(GL_VIEWPORT, iViewport.data());
+    mShader.SetUniform(mShader.GetUniformLocation("uViewportPos"),
+        static_cast<float>(iViewport.at(0)), static_cast<float>(iViewport.at(1)));
 
     mShader.SetUniform(mShader.GetUniformLocation("uSharadTexture"), 0);
     mShader.SetUniform(mShader.GetUniformLocation("uDepthBuffer"), 1);
-    mShader.SetUniform(mShader.GetUniformLocation("uSceneScale"), (float)mSceneScale);
+    mShader.SetUniform(mShader.GetUniformLocation("uSceneScale"), static_cast<float>(mSceneScale));
     mShader.SetUniform(
         mShader.GetUniformLocation("uHeightScale"), mGraphicsEngine->pHeightScale.get());
     mShader.SetUniform(mShader.GetUniformLocation("uRadius"),
-        (float)cs::core::SolarSystem::getRadii(getCenterName())[0]);
-    mShader.SetUniform(mShader.GetUniformLocation("uTime"), (float)(mCurrTime - mStartExistence));
+        static_cast<float>(cs::core::SolarSystem::getRadii(getCenterName())[0]));
+    mShader.SetUniform(
+        mShader.GetUniformLocation("uTime"), static_cast<float>(mCurrTime - mStartExistence));
     mShader.SetUniform(
         mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
@@ -346,7 +350,7 @@ bool Sharad::Do() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool Sharad::GetBoundingBox(VistaBoundingBox& bb) {
+bool Sharad::GetBoundingBox(VistaBoundingBox& /*bb*/) {
   return false;
 }
 
@@ -359,11 +363,11 @@ Sharad::FramebufferCallback::FramebufferCallback(VistaTexture* pDepthBuffer)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool Sharad::FramebufferCallback::Do() {
-  GLint iViewport[4];
-  glGetIntegerv(GL_VIEWPORT, iViewport);
+  std::array<GLint, 4> iViewport{};
+  glGetIntegerv(GL_VIEWPORT, iViewport.data());
   mDepthBuffer->Bind();
-  glCopyTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, iViewport[0], iViewport[1],
-      iViewport[2], iViewport[3], 0);
+  glCopyTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, iViewport.at(0), iViewport.at(1),
+      iViewport.at(2), iViewport.at(3), 0);
   return true;
 }
 

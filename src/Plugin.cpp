@@ -23,7 +23,7 @@ EXPORT_FN cs::core::PluginBase* create() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
-  delete pluginBase;
+  delete pluginBase; // NOLINT(cppcoreguidelines-owning-memory)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +76,7 @@ void Plugin::init() {
               mPluginSettings.mFilePath + sName + "_geom.tab");
           mSolarSystem->registerAnchor(sharad);
 
-          auto sharadNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), sharad.get());
+          auto* sharadNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), sharad.get());
           VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
               sharadNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 2);
 
