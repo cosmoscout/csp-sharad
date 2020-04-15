@@ -182,21 +182,16 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
 
   std::vector<ProfileRadarData> meta;
 
-  while (fgetc(pFile) != EOF) {
-    ProfileRadarData dataElement{};
+  ProfileRadarData dataElement{};
 
-    // Scan the File, this is specific to the one SHARAD we currently have
-    // NOLINTNEXTLINE(cert-err34-c)
-    if (fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
-            &dataElement.Year, &dataElement.Month, &dataElement.Day, &dataElement.Hour,
-            &dataElement.Minute, &dataElement.Second, &dataElement.Millisecond,
-            &dataElement.Latitude, &dataElement.Longitude, &dataElement.SurfaceAltitude,
-            &dataElement.MROAltitude, &dataElement.c, &dataElement.d, &dataElement.e,
-            &dataElement.f) == 16) {
-      meta.push_back(dataElement);
-    } else {
-      spdlog::warn("Failed to read some Sharad data from file '{}'!", sTabFile);
-    }
+  // Scan the File, this is specific to the one SHARAD we currently have
+  while ( // NOLINTNEXTLINE(cert-err34-c)
+      fscanf(pFile, "%d,%d-%d-%dT%d:%d:%d.%d, %f,%f,%f,%f, %f,%f,%f,%f", &dataElement.Number,
+          &dataElement.Year, &dataElement.Month, &dataElement.Day, &dataElement.Hour,
+          &dataElement.Minute, &dataElement.Second, &dataElement.Millisecond, &dataElement.Latitude,
+          &dataElement.Longitude, &dataElement.SurfaceAltitude, &dataElement.MROAltitude,
+          &dataElement.c, &dataElement.d, &dataElement.e, &dataElement.f) == 16) {
+    meta.push_back(dataElement);
   }
 
   CS_WARNINGS_POP
