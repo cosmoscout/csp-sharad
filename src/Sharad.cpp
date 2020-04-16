@@ -12,13 +12,13 @@
 #include "../../../src/cs-utils/FrameTimings.hpp"
 #include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/utils.hpp"
+#include "logger.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaGroupNode.h>
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <spdlog/spdlog.h>
 
 #include <cstdio>
 #include <utility>
@@ -176,7 +176,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   FILE* pFile = fopen(sTabFile.c_str(), "r");
 
   if (pFile == nullptr) {
-    spdlog::error("Failed to add Sharad data: Cannot open file '{}'!", sTabFile);
+    logger()->error("Failed to add Sharad data: Cannot open file '{}'!", sTabFile);
     return;
   }
 
