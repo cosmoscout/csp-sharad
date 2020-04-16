@@ -24,8 +24,6 @@ class Plugin : public cs::core::PluginBase {
     std::string mFilePath;
   };
 
-  Plugin();
-
   void init() override;
   void deInit() override;
 
