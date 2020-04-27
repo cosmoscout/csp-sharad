@@ -33,9 +33,14 @@ namespace csp::sharad {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSection(
-      "csp-sharad", [&] { o.mFilePath = cs::core::parseProperty<std::string>("filePath", j); });
+void from_json(nlohmann::json const& j, Plugin::Settings& o) {
+  cs::core::Settings::deserialize(j, "filePath", o.mFilePath);
+  cs::core::Settings::deserialize(j, "enabled", o.mEnabled);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings const& o) {
+  cs::core::Settings::serialize(j, "filePath", o.mFilePath);
+  cs::core::Settings::serialize(j, "enabled", o.mEnabled);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +49,10 @@ void Plugin::init() {
 
   logger().info("Loading plugin...");
 
-  mPluginSettings = mAllSettings->mPlugins.at("csp-sharad");
+  mOnLoadConnection = mAllSettings->onLoad().connect([this]() { onLoad(); });
+
+  mOnSaveConnection = mAllSettings->onSave().connect(
+      [this]() { mAllSettings->mPlugins["csp-sharad"] = mPluginSettings; });
 
   mGuiManager->addHtmlToGui("sharad", "../share/resources/gui/sharad-template.html");
 
@@ -53,46 +61,64 @@ void Plugin::init() {
   mGuiManager->addPluginTabToSideBarFromHTML(
       "SHARAD Profiles", "line_style", "../share/resources/gui/sharad-tab.html");
 
-  boost::filesystem::path               dir(mPluginSettings.mFilePath);
-  boost::filesystem::directory_iterator end_iter;
+  mGuiManager->getGui()->registerCallback("sharad.setEnabled",
+      "Enables or disables the rendering of SHARAD profiles.",
+      std::function([this](bool enable) { mPluginSettings.mEnabled = enable; }));
 
-  if (boost::filesystem::exists(dir) && boost::filesystem::is_directory(dir)) {
-    for (boost::filesystem::directory_iterator dir_iter(dir); dir_iter != end_iter; ++dir_iter) {
-      if (boost::filesystem::is_regular_file(dir_iter->status())) {
-        boost::filesystem::path path(boost::filesystem::path(*dir_iter).normalize());
-        std::string             file(path.stem().string());
-        std::string             ext(path.extension().string());
+  mPluginSettings.mFilePath.connect([this](std::string const& filePath) {
+    // Delete all old Sharad profiles first.
+    for (auto const& sharad : mSharads) {
+      mSolarSystem->unregisterAnchor(sharad);
+    }
 
-        if (ext == ".tab") {
-          std::string sName  = file.substr(0, file.length() - 5);
-          auto        sharad = std::make_shared<Sharad>(mGraphicsEngine, "MARS", "IAU_Mars",
-              mPluginSettings.mFilePath + sName + "_tiff.tif",
-              mPluginSettings.mFilePath + sName + "_geom.tab");
-          mSolarSystem->registerAnchor(sharad);
+    for (auto const& node : mSharadNodes) {
+      mSceneGraph->GetRoot()->DisconnectChild(node.get());
+    }
 
-          auto* sharadNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), sharad.get());
-          VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-              sharadNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 2);
+    mSharads.clear();
+    mSharadNodes.clear();
 
-          mSharads.push_back(sharad);
-          mSharadNodes.emplace_back(sharadNode);
+    // Clear UI list.
+    mGuiManager->getGui()->callJavascript("CosmoScout.gui.clearHtml", "list-sharad");
 
-          mGuiManager->getGui()->callJavascript(
-              "CosmoScout.sharad.add", sName, sharad->getStartExistence() + 10);
+    // Then add new ones.
+    boost::filesystem::path               dir(filePath);
+    boost::filesystem::directory_iterator end_iter;
+
+    if (boost::filesystem::exists(dir) && boost::filesystem::is_directory(dir)) {
+      for (boost::filesystem::directory_iterator dir_iter(dir); dir_iter != end_iter; ++dir_iter) {
+        if (boost::filesystem::is_regular_file(dir_iter->status())) {
+          boost::filesystem::path path(boost::filesystem::path(*dir_iter).normalize());
+          std::string             file(path.stem().string());
+          std::string             ext(path.extension().string());
+
+          if (ext == ".tab") {
+            std::string sName  = file.substr(0, file.length() - 5);
+            auto        sharad = std::make_shared<Sharad>(mAllSettings, "MARS", "IAU_Mars",
+                filePath + sName + "_tiff.tif", filePath + sName + "_geom.tab");
+            mSolarSystem->registerAnchor(sharad);
+
+            auto* sharadNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), sharad.get());
+            VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+                sharadNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 2);
+            sharadNode->SetIsEnabled(mPluginSettings.mEnabled.get());
+
+            mSharads.push_back(sharad);
+            mSharadNodes.emplace_back(sharadNode);
+
+            mGuiManager->getGui()->callJavascript(
+                "CosmoScout.sharad.add", sName, sharad->getStartExistence() + 10);
+          }
         }
       }
     }
-  }
+  });
 
-  mEnabled.connectAndTouch([this](bool val) {
+  mPluginSettings.mEnabled.connectAndTouch([this](bool val) {
     for (auto const& node : mSharadNodes) {
       node->SetIsEnabled(val);
     }
   });
-
-  mGuiManager->getGui()->registerCallback("sharad.setEnabled",
-      "Enables or disables the rendering of SHARAD profiles.",
-      std::function([this](bool enable) { mEnabled = enable; }));
 
   mActiveBodyConnection = mSolarSystem->pActiveBody.connectAndTouch(
       [this](std::shared_ptr<cs::scene::CelestialBody> const& body) {
@@ -105,6 +131,9 @@ void Plugin::init() {
         mGuiManager->getGui()->callJavascript(
             "CosmoScout.sidebar.setTabEnabled", "SHARAD Profiles", enabled);
       });
+
+  // Load settings.
+  onLoad();
 
   logger().info("Loading done.");
 }
@@ -128,7 +157,17 @@ void Plugin::deInit() {
   mGuiManager->getGui()->unregisterCallback("sharad.setEnabled");
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.unregisterHtml", "sharad");
 
+  mAllSettings->onLoad().disconnect(mOnLoadConnection);
+  mAllSettings->onSave().disconnect(mOnSaveConnection);
+
   logger().info("Unloading done.");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Plugin::onLoad() {
+  // Read settings from JSON.
+  from_json(mAllSettings->mPlugins.at("csp-sharad"), mPluginSettings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

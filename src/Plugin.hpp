@@ -21,19 +21,23 @@ namespace csp::sharad {
 class Plugin : public cs::core::PluginBase {
  public:
   struct Settings {
-    std::string mFilePath;
+    cs::utils::Property<std::string> mFilePath;
+    cs::utils::DefaultProperty<bool> mEnabled{false};
   };
 
   void init() override;
   void deInit() override;
 
  private:
+  void onLoad();
+
   Settings                                      mPluginSettings;
   std::vector<std::shared_ptr<Sharad>>          mSharads;
   std::vector<std::unique_ptr<VistaOpenGLNode>> mSharadNodes;
 
-  cs::utils::Property<bool> mEnabled              = false;
-  int                       mActiveBodyConnection = -1;
+  int mActiveBodyConnection = -1;
+  int mOnLoadConnection     = -1;
+  int mOnSaveConnection     = -1;
 };
 
 } // namespace csp::sharad
