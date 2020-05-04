@@ -100,7 +100,7 @@ void Plugin::init() {
 
             auto* sharadNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), sharad.get());
             VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-                sharadNode, static_cast<int>(cs::utils::DrawOrder::ePlanets) + 2);
+                sharadNode, static_cast<int>(cs::utils::DrawOrder::eOpaqueNonHDR) + 2);
             sharadNode->SetIsEnabled(mPluginSettings.mEnabled.get());
 
             mSharads.push_back(sharad);

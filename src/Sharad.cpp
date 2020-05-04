@@ -161,7 +161,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::Settings> settings, std::string const& 
         sceneGraph->NewOpenGLNode(sceneGraph->GetRoot(), mPreCallback.get()));
 
     VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-        mPreCallbackNode.get(), static_cast<int>(cs::utils::DrawOrder::ePlanets) + 1);
+        mPreCallbackNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueNonHDR) + 1);
   }
 
   ++mInstanceCount;
