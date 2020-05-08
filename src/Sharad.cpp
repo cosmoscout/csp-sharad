@@ -143,7 +143,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::Settings> settings, std::string const& 
     , mSettings(std::move(settings))
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTiffFile)) {
   // arbitray date in future
-  mEndExistence = cs::utils::convert::toSpiceTime("2040-01-01 00:00:00.000");
+  mEndExistence = cs::utils::convert::time::toSpice("2040-01-01T00:00:00.000Z");
 
   if (mInstanceCount == 0) {
     mDepthBuffer = std::make_unique<VistaTexture>(GL_TEXTURE_RECTANGLE);
@@ -210,7 +210,7 @@ Sharad::Sharad(std::shared_ptr<cs::core::Settings> settings, std::string const& 
   std::vector<Vertex> vertices(mSamples * 2);
 
   for (int i = 0; i < mSamples; ++i) {
-    double tTime = cs::utils::convert::toSpiceTime(
+    double tTime = cs::utils::convert::time::toSpice(
         boost::posix_time::ptime(boost::gregorian::date(meta[i].Year, meta[i].Month, meta[i].Day),
             boost::posix_time::hours(meta[i].Hour) + boost::posix_time::minutes(meta[i].Minute) +
                 boost::posix_time::seconds(meta[i].Second) +
